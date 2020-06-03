@@ -89,7 +89,7 @@ class WC_Gateway_Advance_Bank_Payment_Offline extends WC_Payment_Gateway
                 'title'       => __('Description', $this->domain),
                 'type'        => 'textarea',
                 'description' => __('Payment method description that the customer will see on your checkout.', $this->domain),
-                'default'     => __('Make your payment directly into our bank account first. Please Upload the Bank Payment Receipt use and your Order ID as the payment reference. Your order will not be shipped until the funds have cleared in our account.', $this->domain),
+                'default'     => __('Make your payment directly into our bank account first on below details.And please Upload the Bank Payment Receipt use and your Order ID as the payment reference. Your order will not be shipped until the funds have cleared in our account.', $this->domain),
                 'desc_tip'    => true,
             ),
 
@@ -102,7 +102,6 @@ class WC_Gateway_Advance_Bank_Payment_Offline extends WC_Payment_Gateway
             ),
 
             'account_details' => array(
-				'title'       => __('dddd', $this->domain),
 				'type' => __('account_details', $this->domain),
 			),
         ));
@@ -292,20 +291,130 @@ class WC_Gateway_Advance_Bank_Payment_Offline extends WC_Payment_Gateway
 
 	}
 
+	/**
+	 * Get bank details and place into a list format.
+	 *
+	 * @param int $order_id Order ID.
+	 */
+	private function bank_details( $order_id = '' ) {
+
+		if ( empty( $this->account_details ) ) {
+			return;
+		}
+
+		// Get order and store in $order.
+		$order = wc_get_order( $order_id );
+
+		$bacs_accounts = apply_filters( 'woocommerce_bacs_accountss', $this->account_details );
+
+		if ( ! empty( $bacs_accounts ) ) {
+			$account_html = '';
+			$has_details  = false;
+
+			foreach ( $bacs_accounts as $bacs_account ) {
+				$bacs_account = (object) $bacs_account;
+
+				if ( $bacs_account->account_name ) {
+					$account_html .= '<p class="wc-bacs-bank-details-account-name"><u>' . wp_kses_post( wp_unslash( $bacs_account->account_name ) ) . '</u>:</p>' . PHP_EOL;
+				}
+
+				$account_html .= '<ul class="wc-bacs-bank-details order_details bacs_details">' . PHP_EOL;
+
+				// BACS account fields shown on the Checkout page.
+				$account_fields = apply_filters(
+					'woocommerce_bacs_account_fields',
+					array(
+						'bank_name'      => array(
+							'label' => __( 'Bank', 'woocommerce' ),
+							'value' => $bacs_account->bank_name,
+						),
+						'account_number' => array(
+							'label' => __( 'Account number', 'woocommerce' ),
+							'value' => $bacs_account->account_number,
+						),
+						'sort_code'      => array(
+							'label' => __( 'IFSC', 'woocommerce' ),
+							'value' => $bacs_account->sort_code,
+						),
+						'iban'           => array(
+							'label' => __( 'IBAN', 'woocommerce' ),
+							'value' => $bacs_account->iban,
+						),
+						'bic'            => array(
+							'label' => __( 'BIC', 'woocommerce' ),
+							'value' => $bacs_account->bic,
+						),
+					),
+					$order_id
+				);
+
+				foreach ( $account_fields as $field_key => $field ) {
+					if ( ! empty( $field['value'] ) ) {
+						$account_html .= '<li class="' . esc_attr( $field_key ) . '">' . wp_kses_post( $field['label'] ) . ': <strong>' . wp_kses_post( wptexturize( $field['value'] ) ) . '</strong></li>' . PHP_EOL;
+						$has_details   = true;
+					}
+				}
+
+				$account_html .= '</ul>';
+			}
+
+			if ( $has_details ) {
+				echo '<section class="woocommerce-bacs-bank-details"><h2 class="wc-bacs-bank-details-heading">' . esc_html__( 'Our bank details', 'woocommerce' ) . '</h2>' . wp_kses_post( PHP_EOL . $account_html ) . '</section>';
+			}
+		}
+
+	}
+
 	public function payment_fields(){
 
 		if ( $description = $this->get_description() ) {
 			echo wpautop( wptexturize( $description ) );
 		}
-
+		
+		$this->bank_details();
 		?>
+		<br>
 		<div id="custom_input">
 			<p class="form-row form-row-wide">
-				<label for="mobile" class=""><?php _e('Mobile Number', $this->domain); ?></label>
-				<input type="text" class="" name="mobile" id="mobile" placeholder="" value="">
+				<label for="bank_payment_receipt" class=""><?php _e('Upload the bank payment receipt', $this->domain); ?></label>
+				<input type="file" name="bank_payment_receipt" class="bank_payment_receipt">
+				<input type="hidden" name="attach_id" class="attach_id">
 			</p>
 		</div>
+		<script>
+			jQuery(document).ready( function($) {
+				$(".bank_payment_receipt").change( function() {
+					var fd = new FormData();
+					fd.append('file', $('.bank_payment_receipt')[0].files[0]);
+					fd.append('action', 'invoice_response');  
+					
+					$.ajax({
+						type: 'POST',
+						url: the_ajax_script.ajaxurl,
+						data: fd,
+						contentType: false,
+						processData: false,
+						success: function(response){
+							if(response=='0'){
+								alert('Invalid File, please upload correct file');
+								$('.attach_id').val('');
+							}else{
+								$('.attach_id').val(response);
+							}
+						}
+					});
+				});
+			});
+		</script>
 		<?php
+	}
+
+	public function validate_fields(){
+		if(!isset($_POST['attach_id']) || empty( $_POST['attach_id']) ) {
+			wc_add_notice(__('<strong>Bank Payment Receipt</strong> is a required field.'), 'error');
+			return false;
+		}
+		return true;
 	}
 
     /**
@@ -360,42 +469,28 @@ class WC_Gateway_Advance_Bank_Payment_Offline extends WC_Payment_Gateway
     }
 }
 
-
-
-add_action('woocommerce_checkout_process', 'process_custom_payment');
-function process_custom_payment(){
-    if($_POST['payment_method'] != 'offline_gateway')
-        return;
-
-	if( !isset($_POST['mobile']) || empty($_POST['mobile']) )
-		wc_add_notice(__('<strong>Phone Number</strong> is a required field.'), 'error');
-}
-
-
 /**
  * Update the order meta with field value
  */
 add_action( 'woocommerce_checkout_update_order_meta', 'custom_payment_update_order_meta' );
 function custom_payment_update_order_meta( $order_id ) {
-
     if($_POST['payment_method'] != 'offline_gateway')
         return;
 
-    update_post_meta( $order_id, 'mobile', $_POST['mobile'] );
+    update_post_meta( $order_id, 'attach_id', $_POST['attach_id'] );
 }
 
 
 /**
  * Display field value on the order edit page
  */
-add_action( 'woocommerce_admin_order_data_after_billing_address', 'custom_checkout_field_display_admin_order_meta', 10, 1 );
+add_action( 'woocommerce_admin_order_data_after_order_details', 'custom_checkout_field_display_admin_order_meta', 10, 1 );
 function custom_checkout_field_display_admin_order_meta($order){
     $method = get_post_meta( $order->id, '_payment_method', true );
     if($method != 'offline_gateway')
         return;
 
-    $mobile = get_post_meta( $order->id, 'mobile', true );
-    $transaction = get_post_meta( $order->id, 'transaction', true );
-
-    echo '<p><strong>'.__( 'Mobile Number' ).':</strong> ' . $mobile . '</p>';
+    $attach_id = get_post_meta( $order->id, 'attach_id', true );
+	$src=wp_get_attachment_url($attach_id, 'full');
+    echo '<p><strong>'.__( 'Bank Payment Invoice' ).':</strong> <a href="'.$src.'"><img src="'.$src.'" height="50"/></a></p>';
 }
