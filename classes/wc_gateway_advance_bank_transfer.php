@@ -477,7 +477,7 @@ function custom_payment_update_order_meta( $order_id ) {
     if($_POST['payment_method'] != 'offline_gateway')
         return;
 
-    update_post_meta( $order_id, 'attach_id', $_POST['attach_id'] );
+    update_post_meta( $order_id, 'attach_id', sanitize_text_field( $_POST['attach_id'] ) );
 }
 
 
