@@ -1,17 +1,17 @@
 <?php
 
-function wc_add_gateways($gateways)
+function abpt_add_gateways($gateways)
 {
-    $gateways[] = 'WC_Gateway_Advance_Bank_Payment_Offline';
+    $gateways[] = 'ABPT_Gateway_Advance_Bank_Payment_Offline';
     return $gateways;
 }
-add_filter('woocommerce_payment_gateways', 'wc_add_gateways');
+add_filter('woocommerce_payment_gateways', 'abpt_add_gateways');
 
 
 /**
  * Adds plugin page links
  */
-function wc_gateway_plugin_links($links)
+function abpt_gateway_plugin_links($links)
 {
 
     $plugin_links = array(
@@ -20,10 +20,10 @@ function wc_gateway_plugin_links($links)
 
     return array_merge($plugin_links, $links);
 }
-add_filter('plugin_action_links_' . plugin_basename(__FILE__), 'wc_gateway_plugin_links');
+add_filter('plugin_action_links_' . plugin_basename(__FILE__), 'abpt_gateway_plugin_links');
 
 
-function uploadInvoice_ajax_load_scripts()
+function abpt_ajax_load_scripts()
 {
     // load our jquery file that sends the $.post request
     wp_enqueue_script("common-ajax", plugin_dir_url(__FILE__) . '/includes/js/common.js', array('jquery'));
@@ -31,9 +31,9 @@ function uploadInvoice_ajax_load_scripts()
     // make the ajaxurl var available to the above script
     wp_localize_script('common-ajax', 'the_ajax_script', array('ajaxurl' => admin_url('admin-ajax.php')));
 }
-add_action('wp_print_scripts', 'uploadInvoice_ajax_load_scripts');
+add_action('wp_print_scripts', 'abpt_ajax_load_scripts');
 
-function uploadInvoice_ajax_process_request()
+function abpt_ajax_process_request()
 {
     $wp_upload_dir = wp_upload_dir();
     $path = $wp_upload_dir['path'] . '/';
@@ -70,4 +70,4 @@ function uploadInvoice_ajax_process_request()
     }
     die();
 }
-add_action('wp_ajax_invoice_response', 'uploadInvoice_ajax_process_request');
+add_action('wp_ajax_invoice_response', 'abpt_ajax_process_request');

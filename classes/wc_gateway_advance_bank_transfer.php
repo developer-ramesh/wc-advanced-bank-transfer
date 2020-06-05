@@ -2,11 +2,11 @@
 /**
  * Advance Direct Offline Payment Gateway
  *
- * @class   WC_Gateway_Advance_Bank_Payment_Offline
+ * @class   ABPT_Gateway_Advance_Bank_Payment_Offline
  * @extends	WC_Payment_Gateway
  */
 
-class WC_Gateway_Advance_Bank_Payment_Offline extends WC_Payment_Gateway
+class ABPT_Gateway_Advance_Bank_Payment_Offline extends WC_Payment_Gateway
 {
 	/**
 	 * Array of locales
@@ -472,8 +472,8 @@ class WC_Gateway_Advance_Bank_Payment_Offline extends WC_Payment_Gateway
 /**
  * Update the order meta with field value
  */
-add_action( 'woocommerce_checkout_update_order_meta', 'custom_payment_update_order_meta' );
-function custom_payment_update_order_meta( $order_id ) {
+add_action( 'woocommerce_checkout_update_order_meta', 'abpt_custom_payment_update_order_meta' );
+function abpt_custom_payment_update_order_meta( $order_id ) {
     if($_POST['payment_method'] != 'offline_gateway')
         return;
 
@@ -484,8 +484,8 @@ function custom_payment_update_order_meta( $order_id ) {
 /**
  * Display field value on the order edit page
  */
-add_action( 'woocommerce_admin_order_data_after_order_details', 'custom_checkout_field_display_admin_order_meta', 10, 1 );
-function custom_checkout_field_display_admin_order_meta($order){
+add_action( 'woocommerce_admin_order_data_after_order_details', 'abpt_custom_checkout_field_display_admin_order_meta', 10, 1 );
+function abpt_custom_checkout_field_display_admin_order_meta($order){
     $method = get_post_meta( $order->id, '_payment_method', true );
     if($method != 'offline_gateway')
         return;

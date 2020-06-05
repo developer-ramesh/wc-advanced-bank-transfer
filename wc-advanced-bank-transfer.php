@@ -18,9 +18,9 @@ if (!in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get
     return;
 }
 
-add_action('plugins_loaded', 'wc_gateway_init', 11);
+add_action('plugins_loaded', 'abpt_gateway_init', 11);
 
-function wc_gateway_init()
+function abpt_gateway_init()
 {
     require_once(plugin_basename('classes/wc_gateway_advance_bank_transfer.php'));
 }
