@@ -6,7 +6,8 @@
  * Description: Make Direct Payment in Bank Account and upload the bank payment receipt during checkout.
  * Author: Ramesh Kumar
  * Author URI: https://in.linkedin.com/in/developer-ramesh
- * Version: 1.0.1
+ * Version: 1.0.2
+ * Tested up to: 5.4.1
  * License: GNU General Public License v3.0
  */
 

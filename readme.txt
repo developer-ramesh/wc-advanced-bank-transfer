@@ -1,11 +1,19 @@
 === Advance Bank Payment Transfer Gateway ===
-
- - Contributors: Ramesh Kumar
+ 
+ - Author: Ramesh Kumar
+ - Contributors: developerramesh
  - Tags: woocommerce, payment gateway, gateway, manual payment
  - Requires WooCommerce at least: 2.1
- - Stable Tag: 1.0.1
+ - Stable Tag: 1.0.2
+ - Version: 1.0.2
+ - Tested up to: 5.4.1
+ - Author URI: https://in.linkedin.com/in/developer-ramesh
+ - Plugin URI: https://github.com/developer-ramesh
  - License: GPLv3.0
  - License URI: http://www.gnu.org/licenses/gpl-3.0.html
+
+
+License: GPLv2 or later
 
 == Description ==
 
